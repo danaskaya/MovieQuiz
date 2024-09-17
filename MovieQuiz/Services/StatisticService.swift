@@ -11,14 +11,7 @@ final class StatisticService: StatisticServiceProtocol {
     private enum Keys: String {
         case correct, total, bestGame, gamesCount
     }
-    var gamesCount: Int {
-        get {
-            userDefaults.integer(forKey: Keys.gamesCount.rawValue)
-        }
-        set {
-            userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
-        }
-    }
+   
     
     var bestGame: GameResult {
         get {
@@ -39,12 +32,22 @@ final class StatisticService: StatisticServiceProtocol {
     
     var totalAccuracy: Double {
         get {
-            gamesCount != 0 ? Double(score) / Double(gamesCount) * 10 : 0
+            if gamesCount != 0 {
+               return  Double(score) / Double(gamesCount) * 10
+            } else {return 0}
         }
     }
     var score: Int {
         get {
             userDefaults.integer(forKey: Keys.total.rawValue)
+        }
+        set {
+            userDefaults.set(newValue, forKey: Keys.total.rawValue)
+        }
+    }
+    var gamesCount: Int {
+        get {
+            userDefaults.integer(forKey: Keys.gamesCount.rawValue)
         }
         set {
             userDefaults.set(newValue, forKey: Keys.gamesCount.rawValue)
@@ -54,6 +57,7 @@ final class StatisticService: StatisticServiceProtocol {
         let gameResult = bestGame
         let newGameResult = GameResult(correct: count, total: amount, date: Date().dateTimeString)
         gamesCount += 1
+        score += count
         if gameResult < newGameResult {
             bestGame = newGameResult
         }
