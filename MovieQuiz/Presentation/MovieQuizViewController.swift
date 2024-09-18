@@ -30,11 +30,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         activityIndicator.startAnimating()
     }
     private var correctAnswers = 0
-    private var currentQuestionIndex = 0
-    private let questionsAmount = 10
     private var questionFactory: QuestionFactoryProtocol?
     private var currentQuestion: QuizQuestion?
     private var statisticService: StatisticServiceProtocol = StatisticService()
+    private let presenter = MovieQuizPresenter()
     
     override var preferredStatusBarStyle: UIStatusBarStyle {
         return .lightContent
@@ -55,7 +54,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             }
 
             currentQuestion = question
-            let viewModel = convert(model: question)
+        let viewModel = presenter.convert(model: question)
         show(quiz: viewModel)
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
@@ -72,20 +71,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз", completion: { [weak self] in
             guard let self = self else {return}
             self.questionFactory?.loadData()
-            self.currentQuestionIndex = 0
+            self.presenter.resetQuestionIndex()
             self.correctAnswers = 0
             self.questionFactory?.requestNextQuestion()
         }
         )
         let alertPresenter = AlertPresenter(alertModel: model, viewController: self)
         alertPresenter.showAlert(model)
-    }
-    private func convert (model: QuizQuestion) -> QuizStepViewModel {
-        let questionStep = QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)")
-        return questionStep
     }
     private func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
@@ -94,7 +86,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     private func show(quiz result: QuizResultsViewModel) {
         let completion = { [weak self] in
-            self?.currentQuestionIndex = 0
+            self?.presenter.resetQuestionIndex()
             self?.correctAnswers = 0
             self?.questionFactory?.requestNextQuestion()
         }
@@ -121,8 +113,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
     private func showNextQuestionOrResults() {
-        if currentQuestionIndex == questionsAmount - 1 {
-            statisticService.store(correct: correctAnswers, total: questionsAmount)
+        if presenter.isLastQuestion() {
+            statisticService.store(correct: correctAnswers, total: presenter.questionsAmount)
             let bestGame = statisticService.bestGame
             let text = """
 Ваш результат: \(correctAnswers)/10
@@ -134,7 +126,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
                                                  buttonText: "Сыграть еще раз")
             show(quiz: viewModel)
         } else {
-            currentQuestionIndex += 1
+            presenter.switchToNextQuestion()
             
             questionFactory?.requestNextQuestion()
         }
