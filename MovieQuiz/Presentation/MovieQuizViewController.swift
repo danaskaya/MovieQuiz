@@ -1,6 +1,6 @@
 import UIKit
 
-final class MovieQuizViewController: UIViewController {
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
     
     @IBOutlet private var imageView: UIImageView!
@@ -17,7 +17,6 @@ final class MovieQuizViewController: UIViewController {
         presenter.noButtonClicked()
     }
     func showLoadingIndicator() {
-        activityIndicator.isHidden = false
         activityIndicator.startAnimating()
     }
     func hideLoadingIndicator() {
@@ -31,20 +30,17 @@ final class MovieQuizViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        presenter = MovieQuizPresenter(viewController: self)
+        let alertPresenter = AlertPresenter(viewController: self)
+        presenter = MovieQuizPresenter(viewController: self, alertPresenter: alertPresenter)
         imageView.layer.cornerRadius = 20
         showLoadingIndicator()
-        presenter.questionFactory?.loadData()
+    }
+    func deselectImageBorder() {
+        imageView.layer.borderWidth = 0
+        imageView.layer.borderColor = nil
     }
     func showNetworkError(message: String) {
-        let model = AlertModel(title: "Ошибка", message: message, buttonText: "Попробовать еще раз", completion: { [weak self] in
-            guard let self = self else {return}
-            self.presenter.questionFactory?.loadData()
-            self.presenter.restartGame()
-        }
-        )
-        let alertPresenter = AlertPresenter(alertModel: model, viewController: self)
-        alertPresenter.showAlert(model)
+        presenter.showNetworkError(message: message)
     }
     func show(quiz step: QuizStepViewModel) {
         imageView.image = step.image
@@ -52,27 +48,12 @@ final class MovieQuizViewController: UIViewController {
         counterLabel.text = step.questionNumber
     }
     func show(quiz result: QuizResultsViewModel) {
-        let message = presenter.makeResultsMessage()
-                
-                let alert = UIAlertController(
-                    title: result.title,
-                    message: message,
-                    preferredStyle: .alert)
-                    
-                let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-                        guard let self = self else { return }
-                        
-                        self.presenter.restartGame()
-                }
-                
-                alert.addAction(action)
-                
-                self.present(alert, animated: true, completion: nil)
+        presenter.show(quiz: result)
             }
+    func highlightImageBorder(isCorrectAnswer: Bool) {
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
     }
-func highlightImageBorder(isCorrectAnswer: Bool) {
-    imageView.layer.masksToBounds = true
-    imageView.layer.borderWidth = 8
-    imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor : UIColor.ypRed.cgColor
+       
 }
-   
