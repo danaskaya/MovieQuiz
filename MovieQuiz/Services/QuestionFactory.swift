@@ -70,6 +70,7 @@ class QuestionFactory: QuestionFactoryProtocol {
             }
         }
     }
+    // у нас по учебнику используется DispatchQueue.global().async, а URLSession проходится только в 10 спринте, в требованиях к заданию тоже не было такого пункта, не понимаю :(
     func requestNextQuestion() {
         DispatchQueue.global().async { [weak self] in
             guard let self = self else { return }
