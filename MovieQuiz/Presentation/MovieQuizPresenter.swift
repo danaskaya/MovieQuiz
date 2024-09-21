@@ -15,7 +15,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     private let statisticService: StatisticServiceProtocol!
     private var currentQuestion: QuizQuestion?
-    private var viewController: MovieQuizViewControllerProtocol
+    private weak var viewController: MovieQuizViewControllerProtocol?
     private var questionFactory: QuestionFactoryProtocol?
     private var alertPresenter: AlertPresenterProtocol
     
@@ -31,11 +31,11 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     }
     private func proceedWithAnswer(isCorrect: Bool) {
         didAnswer(isCorrectAnswer: isCorrect)
-        viewController.highlightImageBorder(isCorrectAnswer: isCorrect)
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else {return}
             self.proceedToNextQuestionOrResults()
-            viewController.deselectImageBorder()
+            viewController?.deselectImageBorder()
             
         }
     }
@@ -58,13 +58,13 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             return resultMessage
         }
     func didLoadDataFromServer() {
-            viewController.hideLoadingIndicator()
+        viewController?.hideLoadingIndicator()
             questionFactory?.requestNextQuestion()
         }
         
     func didFailToLoadData(with error: Error) {
             let message = error.localizedDescription
-            viewController.showNetworkError(message: message)
+        viewController?.showNetworkError(message: message)
         }
     func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
@@ -73,7 +73,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         currentQuestion = question
         let viewModel = convert(model: question)
         DispatchQueue.main.async { [weak self] in
-            self?.viewController.show(quiz: viewModel)
+            self?.viewController?.show(quiz: viewModel)
         }
     }
     func isLastQuestion() -> Bool {
@@ -130,7 +130,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             currentQuestion = question
             let viewModel = convert(model: question)
             DispatchQueue.main.async { [weak self] in
-                self?.viewController.show(quiz: viewModel)
+                self?.viewController?.show(quiz: viewModel)
             }
         }
     private func proceedToNextQuestionOrResults() {
@@ -140,7 +140,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
                 title: "Этот раунд окончен!",
                 text: text,
                 buttonText: "Сыграть ещё раз")
-            viewController.show(quiz: viewModel)
+            viewController?.show(quiz: viewModel)
         } else {
             switchToNextQuestion()
             questionFactory?.requestNextQuestion()
