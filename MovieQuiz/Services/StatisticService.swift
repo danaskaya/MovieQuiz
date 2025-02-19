@@ -33,8 +33,8 @@ final class StatisticService: StatisticServiceProtocol {
     var totalAccuracy: Double {
         get {
             if gamesCount != 0 {
-                let totalQuestions = gamesCount * 10
-               return  Double(score) / Double(totalQuestions) * 100
+                let totalQuestion = gamesCount * 10
+                return Double(score) / Double(totalQuestion) * 100
             } else {return 0}
         }
     }
